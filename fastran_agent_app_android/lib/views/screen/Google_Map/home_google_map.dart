@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:fastran_agent_app_android/export/export.dart';
+import 'package:fastran_agent_app_android/models/Get_location/get_location_model.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart' as loc;
+import 'package:http/http.dart' as http;
 
 class HomeGoogleMap extends StatefulWidget {
-  const HomeGoogleMap({super.key});
+  final LocationModel? initialLocation;
+  const HomeGoogleMap({super.key, this.initialLocation});
 
   @override
   State<HomeGoogleMap> createState() => _HomeGoogleMapState();
@@ -19,6 +23,11 @@ class _HomeGoogleMapState extends State<HomeGoogleMap> {
   final loc.Location _location = loc.Location();
   Marker? _marker;
 
+  String city = "Kochi"; // Default city value
+  double latitude = 0.0;
+  double longitude = 0.0;
+  String address = "Default Address";
+
   CameraPosition _initialCameraPosition = const CameraPosition(
     target: indiaLocation,
     zoom: 14.4746,
@@ -27,11 +36,48 @@ class _HomeGoogleMapState extends State<HomeGoogleMap> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    if (widget.initialLocation != null) {
+      _setInitialLocation(widget.initialLocation!);
+    } else {
+      _getCurrentLocation();
+    }
   }
+  void _setInitialLocation(LocationModel location) {
+  setState(() {
+    try {
+      // Parse latitude and longitude from string to double
+      latitude = location.latitude ;
+      longitude = location.longitude ;
+
+      // Assign other location data
+      address = location.address;
+      city = location.city;
+
+      // Update the camera position and marker
+      _initialCameraPosition = CameraPosition(
+        target: LatLng(latitude, longitude),
+        zoom: 14.4746,
+      );
+
+      _marker = Marker(
+        markerId: MarkerId('${latitude}_${longitude}'),
+        position: LatLng(latitude, longitude),
+        infoWindow: InfoWindow(
+          title: address,
+        ),
+      );
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final GoogleMapController controller = await _controller.future;
+        controller.animateCamera(CameraUpdate.newCameraPosition(_initialCameraPosition));
+      });
+    } catch (e) {
+      print('Error parsing location data: $e');
+    }
+  });
+}
 
   Future<void> _getCurrentLocation() async {
-    print("i'm here");
     bool _serviceEnabled;
     loc.PermissionStatus _permissionGranted;
 
@@ -66,7 +112,14 @@ class _HomeGoogleMapState extends State<HomeGoogleMap> {
   }
 
   Future<void> _searchPlace(String place) async {
-    List<geocoding.Location> locations = await geocoding.locationFromAddress(place);
+    List<geocoding.Location> locations;
+    try {
+      locations = await geocoding.locationFromAddress(place);
+    } catch (e) {
+      print("Error occurred while searching for place: $e");
+      return;
+    }
+
     if (locations.isNotEmpty) {
       final GoogleMapController controller = await _controller.future;
       LatLng target = LatLng(locations.first.latitude, locations.first.longitude);
@@ -85,20 +138,69 @@ class _HomeGoogleMapState extends State<HomeGoogleMap> {
             title: place,
           ),
         );
+        latitude = target.latitude;
+        longitude = target.longitude;
+        address = place; // Assuming the address is the searched place
+        city = "City"; // You might want to set this dynamically
       });
     }
   }
- void _addMarker(LatLng position) {
-    setState(() {
-      _marker = Marker(
-        markerId: MarkerId(position.toString()),
-        position: position,
-        infoWindow: InfoWindow(
-          title: 'Custom Location',
-        ),
-      );
-    });
+
+  void _addMarker(LatLng position) async {
+  List<geocoding.Placemark> placemarks = await geocoding.placemarkFromCoordinates(position.latitude, position.longitude);
+  String newAddress = "";
+  String newCity = "";
+
+  if (placemarks.isNotEmpty) {
+    geocoding.Placemark place = placemarks[0];
+    newAddress = "${place.street}, ${place.locality}, ${place.postalCode}, ${place.country}";
+    newCity = place.locality ?? "City"; // Default to "City" if locality is null
   }
+
+  setState(() {
+    _marker = Marker(
+      markerId: MarkerId(position.toString()),
+      position: position,
+      infoWindow: InfoWindow(
+        title: newAddress,
+      ),
+    );
+    latitude = position.latitude;
+    longitude = position.longitude;
+    address = newAddress;
+    city = newCity;
+  });
+
+  print("${newAddress}/////////////"); // Update this as needed
+}
+
+  Future<void> _postLocation(String city, double latitude, double longitude, String address) async {
+    final url = 'https://fastran-public-apim.azure-api.net/agentapi/location';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'city': city,
+          'latitude': latitude.toString(),
+          'longitude': longitude.toString(),
+          'address': address,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Location posted successfully.');
+      } else {
+        print('Failed to post location. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Failed to post location: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -161,7 +263,11 @@ class _HomeGoogleMapState extends State<HomeGoogleMap> {
               alignment: Alignment.bottomLeft,
               child: InkWell(
                 onTap: () {
-                  // Implement the functionality for the button here.
+                  if (latitude != 0.0 && longitude != 0.0 && address.isNotEmpty && city.isNotEmpty) {
+                    _postLocation(city, latitude, longitude, address);
+                  } else {
+                    print('Location details are not set properly.');
+                  }
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),

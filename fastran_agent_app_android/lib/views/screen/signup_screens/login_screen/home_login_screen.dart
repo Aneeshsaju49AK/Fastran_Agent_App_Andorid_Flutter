@@ -1,5 +1,6 @@
+
+
 import 'package:fastran_agent_app_android/export/export.dart';
-import 'package:fastran_agent_app_android/views/screen/otpverification_screen/home_otp_screen.dart';
 
 class HomeLoginScreen extends StatefulWidget {
   final String labelChoosen;
@@ -18,6 +19,7 @@ class HomeLoginScreen extends StatefulWidget {
 class _HomeLoginScreenState extends State<HomeLoginScreen> {
   late final String labelhead;
   late final String underLineLabel;
+  late String mobile;
   final TextEditingController _mobileNumberController = TextEditingController();
 
   @override
@@ -42,70 +44,21 @@ class _HomeLoginScreenState extends State<HomeLoginScreen> {
               height: height,
               width: width,
               color: Colors.white,
-              border: BorderDirectional(
-                bottom: BorderSide(
-                    style: BorderStyle.solid,
-                    color: Colors.grey.withOpacity(0.3),
-                    width: 1),
-              ),
-              childWidget: Column(
-                children: [
-                  CommonContainer(
-                    heightSize: 14,
-                    widthSize: 1,
-                    height: height,
-                    width: width,
-                    color: Colors.white,
-                    childWidget: Row(
-                      children: [
-                        CustompaddingOnly(
-                          left: 5,
-                          right: 5,
-                          childWidget: CustomIcons(
-                            iconChoosen: Icons.navigate_before,
-                            sizeChoosen: 27,
-                            function: (context) => navigationPopScreen(context),
-                          ),
-                        ),
-                        const CustomText(
-                          label: 'Back',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ],
-                    ),
-                  ),
-                  CommonContainer(
-                    heightSize: 8,
-                    widthSize: 1,
-                    height: height,
-                    width: width,
-                    color: Colors.white,
-                    childWidget: CustompaddingAll(
-                      value: 10,
-                      childWidget: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CustomText(
-                            label: labelhead,
-                            fontSize: 25,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          // CustomText(
-                          //   label: underLineLabel,
-                          //   color: Colors.grey,
-                          //   fontWeight: FontWeight.w700,
-                          // ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              // border: BorderDirectional(
+              //   bottom: BorderSide(
+              //       style: BorderStyle.solid,
+              //       color: Colors.grey.withOpacity(0.3),
+              //       width: 1),
+              // ),
+              childWidget: MainHeaderCommon(
+                height: height,
+                width: width,
+                isIconwidgetNeeded: false,
+                headLabel: "Login",
               ),
             ),
             CustompaddingOnly(
-              top: 20,
+              top: 15,
               childWidget: CommonContainer(
                 heightSize: 9,
                 widthSize: 1,
@@ -166,8 +119,12 @@ class _HomeLoginScreenState extends State<HomeLoginScreen> {
                 alignment: Alignment.bottomCenter,
                 child: InkWell(
                   onTap: () {
+                    mobile = _mobileNumberController.text;
                     navigateToScreen(
-                        context, const  HomeOtpScreen());
+                        context,
+                        HomeOtpScreen(
+                          mobileNumber: mobile,
+                        ));
                   },
                   child: CustomButton(
                     heightSize: 13,

@@ -1,10 +1,7 @@
 import 'package:fastran_agent_app_android/export/export.dart';
-import 'package:fastran_agent_app_android/models/Vehicle_Model/vehicle_model.dart';
-import 'package:fastran_agent_app_android/services/Vehicle_Services/vehicle_services.dart';
-import 'package:fastran_agent_app_android/views/screen/otpverification_screen/home_otp_screen.dart';
 
 class HomeLoadScreen extends StatefulWidget {
-  HomeLoadScreen({super.key});
+  const HomeLoadScreen({super.key});
 
   @override
   State<HomeLoadScreen> createState() => _HomeLoadScreenState();
@@ -16,16 +13,7 @@ class _HomeLoadScreenState extends State<HomeLoadScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchVehicles();
-  }
-
-  void _fetchVehicles() async {
-    try {
-      List<Vehicle> vehicles = await VehicleService.fetchVehicles();
-      _vehicles.value = vehicles;
-    } catch (e) {
-      print('Failed to fetch vehicles: $e');
-    }
+    VehicleService.fetchVehicles(_vehicles);
   }
 
   @override
@@ -98,7 +86,8 @@ class _HomeLoadScreenState extends State<HomeLoadScreen> {
                                         child: const CircleAvatar(
                                           radius: 13,
                                           backgroundColor: Colors.black,
-                                          child: Icon(Icons.check, color: Colors.white, size: 18),
+                                          child: Icon(Icons.check,
+                                              color: Colors.white, size: 18),
                                         ),
                                       )
                                     ],
@@ -110,8 +99,10 @@ class _HomeLoadScreenState extends State<HomeLoadScreen> {
                                   height: height,
                                   width: width,
                                   childWidget: Column(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       CustomText(label: vehicle.vehicleType),
                                       CustomText(label: vehicle.name),
@@ -124,8 +115,10 @@ class _HomeLoadScreenState extends State<HomeLoadScreen> {
                                   height: height,
                                   width: width,
                                   childWidget: Column(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       CustomText(label: 'Onboarded'),
                                       CustomButton(

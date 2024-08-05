@@ -1,8 +1,7 @@
+
 import 'package:fastran_agent_app_android/export/export.dart';
-import 'package:fastran_agent_app_android/models/Addvehicle_Model/add_vehicle_model.dart';
-import 'package:fastran_agent_app_android/services/Add_Vehicle_Services/add_vehicle_services.dart';
-import 'package:fastran_agent_app_android/views/screen/otpverification_screen/home_otp_screen.dart';
-import 'package:uuid/uuid.dart';
+import 'package:fastran_agent_app_android/views/widgets/custom_textediting_with_heading/custom_heading_with_textediting.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -36,48 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     mobileNumberController.dispose();
     super.dispose();
   }
-  void validateAndSubmit() {
-    if (nameController.text.isEmpty || regNumberController.text.isEmpty || mobileNumberController.text.isEmpty) {
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all fields')),
-      );
-      return;
-    }
-
-    if (selectedIndex == null) {
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please choose a vehicle')),
-      );
-      return;
-    }
-
-    // Submit the form
-    print("Name: ${nameController.text}");
-    print("Registration Number: ${regNumberController.text}");
-    print("${mobileNumberController.text}");
-    print("Selected vehicle: ${vehicleBrand[selectedIndex!]}");
-     var uuid = Uuid();
-     String vehicleId =uuid.v4().toString();
-    AddVehicle vehicle = AddVehicle(
-      id: vehicleId,
-      mobile: mobileNumberController.text,
-      rcNumber: regNumberController.text,
-      name: nameController.text,
-      vehicleType: vehicleBrand[selectedIndex!],
-      city: "Erode",
-      address: "sydfhvsfd",
-      latitude: "34.6533",
-      longitude: "45.3432",
-      date: DateTime.now().toIso8601String(),
-    );
-
-    // Submit the form
-    submitVehicleData(vehicle,context);
-    print(uuid.toString());
-    print(uuid.runtimeType);
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -276,7 +234,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 alignment: Alignment.bottomCenter,
                 child: InkWell(
                   onTap: () {
-                    validateAndSubmit();
+                    validateAndSubmit(
+                      context,
+                      nameController,
+                      regNumberController,
+                      mobileNumberController,
+                      selectedIndex,
+                      vehicleBrand
+                    );
                   },
                   child: CustomButton(
                     heightSize: 15,
@@ -298,53 +263,3 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class CommonHeadWithTextfield extends StatelessWidget {
-  const CommonHeadWithTextfield({
-    super.key,
-    required this.height,
-    required this.width,
-    required this.label,
-    required this.controller,
-  });
-
-  final double height;
-  final double width;
-  final String label;
-  final TextEditingController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return CommonContainer(
-      heightSize: 11,
-      widthSize: 1,
-      height: height,
-      width: width,
-      childWidget: Padding(
-        padding: const EdgeInsets.only(left: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CustomText(
-              label: label,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8, right: 8),
-              child: CommonContainer(
-                height: height,
-                width: width,
-                widthSize: 1,
-                heightSize: 22,
-                childWidget: Customtexteditfield(
-                    keyboardType: TextInputType.emailAddress,
-                    controller: controller,),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
